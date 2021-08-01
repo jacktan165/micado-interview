@@ -63,6 +63,7 @@ pool.on("error", (err, client) => {
       });
   } finally {
     console.log("Mapping complete.");
+    console.log("Releasing database connection pool...");
     client.release();
   }
 })();

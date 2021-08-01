@@ -1,4 +1,4 @@
-## Micado Interview
+## Micado Interview Backend
 
 An API server returning the number of active and recovered covid patients based on the date range.
 
@@ -10,7 +10,7 @@ An API server returning the number of active and recovered covid patients based 
 
 ## Setup
 
-- Run `docker-compose up -d micado-interview-db`
+- Run `docker-compose up -d micado-interview-db`. _Wait until the database is loaded, you can verify it is ready via `docker-compose logs`_.
 - Run `yarn`
 - Run `yarn mapCsvToDb` once to populate the database.
 - Run `yarn start`

@@ -24,6 +24,8 @@ pool.on("error", (err, client) => {
 });
 
 (async () => {
+  console.log("Mapping Covid CSV data into database...");
+
   const client = await pool.connect();
   try {
     fs.createReadStream(COVID_CSV_FILE)
@@ -60,6 +62,7 @@ pool.on("error", (err, client) => {
         );
       });
   } finally {
+    console.log("Mapping complete.");
     client.release();
   }
 })();

@@ -27,7 +27,10 @@ pool.on("error", (err, client) => {
   console.log("Mapping Covid CSV data into database...");
 
   const client = await pool.connect();
+
   try {
+    await client.query("BEGIN");
+
     fs.createReadStream(COVID_CSV_FILE)
       .pipe(csv.parse())
       .on("data", (data) => {
@@ -37,33 +40,35 @@ pool.on("error", (err, client) => {
         // remove the first line: header
         csvData.shift();
 
-        await Promise.all(
-          csvData.map(async (data) => {
-            // value
-            data[6] = isNaN(parseInt(data[6])) ? 0 : parseInt(data[6]);
+        csvData.forEach(async (data) => {
+          // value
+          data[6] = isNaN(parseInt(data[6])) ? 0 : parseInt(data[6]);
 
-            // parameter
-            data[5] = format(
-              parse(data[5], "dd/MM/yyyy", new Date()),
-              "yyyy/MM/dd"
-            );
+          // parameter
+          data[5] = format(
+            parse(data[5], "dd/MM/yyyy", new Date()),
+            "yyyy/MM/dd"
+          );
 
-            // date_last_updated
-            data[8] = format(
-              parse(data[8], "dd/MM/yyyy", new Date()),
-              "yyyy/MM/dd"
-            );
+          // date_last_updated
+          data[8] = format(
+            parse(data[8], "dd/MM/yyyy", new Date()),
+            "yyyy/MM/dd"
+          );
 
-            await client.query(
-              "INSERT INTO Covid (class, category, indicator_name, series_name, sub_series_name, parameter, value, units, date_last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-              data
-            );
-          })
-        );
+          await client.query(
+            "INSERT INTO covid (class, category, indicator_name, series_name, sub_series_name, parameter, value, units, date_last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            data
+          );
+        });
       });
+
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
   } finally {
     console.log("Mapping complete.");
     console.log("Releasing database connection pool...");
     client.release();
   }
-})();
+})().catch((err) => console.error(err));
